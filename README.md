@@ -1,9 +1,6 @@
-**NOTE: This is the development branch for `linalg.h v3.0`. Breaking changes may occur until the `v3.0` tag is published.**
+**NOTE: This branch is abandoned. It was originally envisioned as a change to take some breaking changes in the syntax and usage of `linalg`, in order to enable some new functionality. I am, however, unhappy with the way it turned out. I have backported much of the functionality to `linalg.h v2` and will not perform further development on the `v3` branch.**
 
-[![Release is 3.0-beta](https://img.shields.io/badge/version-3.0--beta-blue.svg)](http://raw.githubusercontent.com/sgorsten/linalg/v3/linalg.h)
 [![License is Unlicense](http://img.shields.io/badge/license-Unlicense-blue.svg?style=flat)](http://unlicense.org/)
-[![Travis CI build status](http://travis-ci.org/sgorsten/linalg.svg?branch=v3)](https://travis-ci.org/sgorsten/linalg)
-[![Appveyor build status](http://ci.appveyor.com/api/projects/status/l4bfv5omodkajuc9?svg=true)](https://ci.appveyor.com/project/sgorsten/linalg)
 
 [`linalg.h`](/linalg.h) is a [single header](http://github.com/nothings/stb/blob/master/docs/other_libs.md), [public domain](http://unlicense.org/) linear algebra library for [C++11](http://en.cppreference.com/w/). It is inspired by the syntax of popular shading and compute languages and is intended to serve as a lightweight alternative to projects such as [GLM](http://glm.g-truc.net/0.9.7/), [Boost.QVM](https://www.boost.org/doc/libs/1_66_0/libs/qvm/doc/index.html) or [Eigen](http://eigen.tuxfamily.org/) in the domains such as computer graphics, computational geometry, and physical simulation. It allows you to easily write programs like the following:
 
