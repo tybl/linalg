@@ -65,12 +65,12 @@
 namespace linalg {
 // Small, fixed-length vector type, consisting of exactly M elements of type T,
 // and presumed to be a column-vector unless otherwise noted.
-template <class T, int M>
+template <class T, size_t M>
 struct vec;
 
 // Small, fixed-size matrix type, consisting of exactly M rows and N columns of
 // type T, stored in column-major order.
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 struct mat;
 
 // Specialize converter<T,U> with a function application operator that converts
@@ -86,11 +86,12 @@ using conv_t = typename std::enable_if<!std::is_same<T, U>::value,
 // Trait for retrieving scalar type of any linear algebra object
 template <class A>
 struct scalar_type {};
-template <class T, int M>
+
+template <class T, size_t M>
 struct scalar_type<vec<T, M>> {
   using type = T;
 };
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 struct scalar_type<mat<T, M, N>> {
   using type = T;
 };
@@ -161,7 +162,7 @@ struct any_compare<vec<T, 4>, vec<T, 4>> {
                                                          : ord<T>{a.w, b.w};
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct any_compare<mat<T, M, 1>, mat<T, M, 1>> {
   using type = ord<T>;
   constexpr ord<T> operator()(const mat<T, M, 1>& a,
@@ -169,7 +170,7 @@ struct any_compare<mat<T, M, 1>, mat<T, M, 1>> {
     return compare(a.x, b.x);
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct any_compare<mat<T, M, 2>, mat<T, M, 2>> {
   using type = ord<T>;
   constexpr ord<T> operator()(const mat<T, M, 2>& a,
@@ -177,7 +178,7 @@ struct any_compare<mat<T, M, 2>, mat<T, M, 2>> {
     return a.x != b.x ? compare(a.x, b.x) : compare(a.y, b.y);
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct any_compare<mat<T, M, 3>, mat<T, M, 3>> {
   using type = ord<T>;
   constexpr ord<T> operator()(const mat<T, M, 3>& a,
@@ -186,7 +187,7 @@ struct any_compare<mat<T, M, 3>, mat<T, M, 3>> {
                       : a.y != b.y ? compare(a.y, b.y) : compare(a.z, b.z);
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct any_compare<mat<T, M, 4>, mat<T, M, 4>> {
   using type = ord<T>;
   constexpr ord<T> operator()(const mat<T, M, 4>& a,
@@ -200,8 +201,9 @@ struct any_compare<mat<T, M, 4>, mat<T, M, 4>> {
 
 // Helper for compile-time index-based access to members of vector and matrix
 // types
-template <int I>
+template <size_t I>
 struct getter;
+
 template <>
 struct getter<0> {
   template <class A>
@@ -232,39 +234,39 @@ struct getter<3> {
 };
 
 // Stand-in for std::integer_sequence/std::make_integer_sequence
-template <int... I>
+template <size_t... I>
 struct seq {};
-template <int A, int N>
+template <size_t A, size_t N>
 struct make_seq_impl;
-template <int A>
+template <size_t A>
 struct make_seq_impl<A, 0> {
   using type = seq<>;
 };
-template <int A>
+template <size_t A>
 struct make_seq_impl<A, 1> {
   using type = seq<A + 0>;
 };
-template <int A>
+template <size_t A>
 struct make_seq_impl<A, 2> {
   using type = seq<A + 0, A + 1>;
 };
-template <int A>
+template <size_t A>
 struct make_seq_impl<A, 3> {
   using type = seq<A + 0, A + 1, A + 2>;
 };
-template <int A>
+template <size_t A>
 struct make_seq_impl<A, 4> {
   using type = seq<A + 0, A + 1, A + 2, A + 3>;
 };
-template <int A, int B>
+template <size_t A, size_t B>
 using make_seq = typename make_seq_impl<A, B - A>::type;
-template <class T, int M, int... I>
-vec<T, sizeof...(I)> constexpr swizzle(const vec<T, M>& v, seq<I...> i) {
+template <class T, size_t M, size_t... I>
+vec<T, sizeof...(I)> constexpr swizzle(const vec<T, M>& v, seq<I...>) {
   return {getter<I>{}(v)...};
 }
-template <class T, int M, int N, int... I, int... J>
+template <class T, size_t M, size_t N, size_t... I, size_t... J>
 mat<T, sizeof...(I), sizeof...(J)> constexpr swizzle(const mat<T, M, N>& m,
-                                                     seq<I...> i, seq<J...> j) {
+                                                     seq<I...> i, seq<J...>) {
   return {swizzle(getter<J>{}(m), i)...};
 }
 
@@ -291,146 +293,147 @@ using scalars_t = typename scalars<T...>::type;
 // arguments
 template <class F, class Void, class... T>
 struct apply {}; // Patterns which contain only vectors or scalars
-template <class F, int M, class A>
+
+template <class F, size_t M, class A>
 struct apply<F, scalars_t<>, vec<A, M>> {
   using type = vec<ret_t<F, A>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, const vec<A, M>& a) {
     return {f(getter<I>{}(a))...};
   }
 };
-template <class F, int M, class A, class B>
+template <class F, size_t M, class A, class B>
 struct apply<F, scalars_t<>, vec<A, M>, vec<B, M>> {
   using type = vec<ret_t<F, A, B>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, const vec<A, M>& a,
                              const vec<B, M>& b) {
     return {f(getter<I>{}(a), getter<I>{}(b))...};
   }
 };
-template <class F, int M, class A, class B>
+template <class F, size_t M, class A, class B>
 struct apply<F, scalars_t<B>, vec<A, M>, B> {
   using type = vec<ret_t<F, A, B>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, const vec<A, M>& a, B b) {
     return {f(getter<I>{}(a), b)...};
   }
 };
-template <class F, int M, class A, class B>
+template <class F, size_t M, class A, class B>
 struct apply<F, scalars_t<A>, A, vec<B, M>> {
   using type = vec<ret_t<F, A, B>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, A a, const vec<B, M>& b) {
     return {f(a, getter<I>{}(b))...};
   }
 };
-template <class F, int M, class A, class B, class C>
+template <class F, size_t M, class A, class B, class C>
 struct apply<F, scalars_t<>, vec<A, M>, vec<B, M>, vec<C, M>> {
   using type = vec<ret_t<F, A, B, C>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, const vec<A, M>& a,
                              const vec<B, M>& b, const vec<C, M>& c) {
     return {f(getter<I>{}(a), getter<I>{}(b), getter<I>{}(c))...};
   }
 };
-template <class F, int M, class A, class B, class C>
+template <class F, size_t M, class A, class B, class C>
 struct apply<F, scalars_t<C>, vec<A, M>, vec<B, M>, C> {
   using type = vec<ret_t<F, A, B, C>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, const vec<A, M>& a,
                              const vec<B, M>& b, C c) {
     return {f(getter<I>{}(a), getter<I>{}(b), c)...};
   }
 };
-template <class F, int M, class A, class B, class C>
+template <class F, size_t M, class A, class B, class C>
 struct apply<F, scalars_t<B>, vec<A, M>, B, vec<C, M>> {
   using type = vec<ret_t<F, A, B, C>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, const vec<A, M>& a, B b,
                              const vec<C, M>& c) {
     return {f(getter<I>{}(a), b, getter<I>{}(c))...};
   }
 };
-template <class F, int M, class A, class B, class C>
+template <class F, size_t M, class A, class B, class C>
 struct apply<F, scalars_t<B, C>, vec<A, M>, B, C> {
   using type = vec<ret_t<F, A, B, C>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, const vec<A, M>& a, B b, C c) {
     return {f(getter<I>{}(a), b, c)...};
   }
 };
-template <class F, int M, class A, class B, class C>
+template <class F, size_t M, class A, class B, class C>
 struct apply<F, scalars_t<A>, A, vec<B, M>, vec<C, M>> {
   using type = vec<ret_t<F, A, B, C>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, A a, const vec<B, M>& b,
                              const vec<C, M>& c) {
     return {f(a, getter<I>{}(b), getter<I>{}(c))...};
   }
 };
-template <class F, int M, class A, class B, class C>
+template <class F, size_t M, class A, class B, class C>
 struct apply<F, scalars_t<A, C>, A, vec<B, M>, C> {
   using type = vec<ret_t<F, A, B, C>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, A a, const vec<B, M>& b, C c) {
     return {f(a, getter<I>{}(b), c)...};
   }
 };
-template <class F, int M, class A, class B, class C>
+template <class F, size_t M, class A, class B, class C>
 struct apply<F, scalars_t<A, B>, A, B, vec<C, M>> {
   using type = vec<ret_t<F, A, B, C>, M>;
   enum { size = M, mm = 0 };
-  template <int... I>
+  template <size_t... I>
   static constexpr type impl(seq<I...>, F f, A a, B b, const vec<C, M>& c) {
     return {f(a, b, getter<I>{}(c))...};
   }
 };
-template <class F, int M, int N, class A>
+template <class F, size_t M, size_t N, class A>
 struct apply<F, scalars_t<>, mat<A, M, N>> {
   using type = mat<ret_t<F, A>, M, N>;
   enum { size = N, mm = 0 };
-  template <int... J>
+  template <size_t... J>
   static constexpr type impl(seq<J...>, F f, const mat<A, M, N>& a) {
     return {apply<F, void, vec<A, M>>::impl(make_seq<0, M>{}, f,
                                             getter<J>{}(a))...};
   }
 };
-template <class F, int M, int N, class A, class B>
+template <class F, size_t M, size_t N, class A, class B>
 struct apply<F, scalars_t<>, mat<A, M, N>, mat<B, M, N>> {
   using type = mat<ret_t<F, A, B>, M, N>;
   enum { size = N, mm = 1 };
-  template <int... J>
+  template <size_t... J>
   static constexpr type impl(seq<J...>, F f, const mat<A, M, N>& a,
                              const mat<B, M, N>& b) {
     return {apply<F, void, vec<A, M>, vec<B, M>>::impl(
         make_seq<0, M>{}, f, getter<J>{}(a), getter<J>{}(b))...};
   }
 };
-template <class F, int M, int N, class A, class B>
+template <class F, size_t M, size_t N, class A, class B>
 struct apply<F, scalars_t<B>, mat<A, M, N>, B> {
   using type = mat<ret_t<F, A, B>, M, N>;
   enum { size = N, mm = 0 };
-  template <int... J>
+  template <size_t... J>
   static constexpr type impl(seq<J...>, F f, const mat<A, M, N>& a, B b) {
     return {apply<F, void, vec<A, M>, B>::impl(make_seq<0, M>{}, f,
                                                getter<J>{}(a), b)...};
   }
 };
-template <class F, int M, int N, class A, class B>
+template <class F, size_t M, size_t N, class A, class B>
 struct apply<F, scalars_t<A>, A, mat<B, M, N>> {
   using type = mat<ret_t<F, A, B>, M, N>;
   enum { size = N, mm = 0 };
-  template <int... J>
+  template <size_t... J>
   static constexpr type impl(seq<J...>, F f, A a, const mat<B, M, N>& b) {
     return {apply<F, void, A, vec<B, M>>::impl(make_seq<0, M>{}, f, a,
                                                getter<J>{}(b))...};
@@ -758,8 +761,8 @@ struct vec<T, 1> {
   template <class U>
   constexpr explicit vec(const vec<U, 1>& v)
       : vec(static_cast<T>(v.x)) {}
-  constexpr const T& operator[](int i) const { return x; }
-  LINALG_CONSTEXPR14 T& operator[](int i) { return x; }
+  constexpr const T& operator[](size_t) const { return x; }
+  LINALG_CONSTEXPR14 T& operator[](size_t) { return x; }
 
   template <class U, class = detail::conv_t<vec, U>>
   constexpr vec(const U& u)
@@ -785,8 +788,8 @@ struct vec<T, 2> {
   template <class U>
   constexpr explicit vec(const vec<U, 2>& v)
       : vec(static_cast<T>(v.x), static_cast<T>(v.y)) {}
-  constexpr const T& operator[](int i) const { return i == 0 ? x : y; }
-  LINALG_CONSTEXPR14 T& operator[](int i) { return i == 0 ? x : y; }
+  constexpr const T& operator[](size_t i) const { return i == 0 ? x : y; }
+  LINALG_CONSTEXPR14 T& operator[](size_t i) { return i == 0 ? x : y; }
 
   template <class U, class = detail::conv_t<vec, U>>
   constexpr vec(const U& u)
@@ -816,10 +819,10 @@ struct vec<T, 3> {
   template <class U>
   constexpr explicit vec(const vec<U, 3>& v)
       : vec(static_cast<T>(v.x), static_cast<T>(v.y), static_cast<T>(v.z)) {}
-  constexpr const T& operator[](int i) const {
+  constexpr const T& operator[](size_t i) const {
     return i == 0 ? x : i == 1 ? y : z;
   }
-  LINALG_CONSTEXPR14 T& operator[](int i) {
+  LINALG_CONSTEXPR14 T& operator[](size_t i) {
     return i == 0 ? x : i == 1 ? y : z;
   }
   constexpr const vec<T, 2>& xy() const {
@@ -860,10 +863,10 @@ struct vec<T, 4> {
   constexpr explicit vec(const vec<U, 4>& v)
       : vec(static_cast<T>(v.x), static_cast<T>(v.y), static_cast<T>(v.z),
             static_cast<T>(v.w)) {}
-  constexpr const T& operator[](int i) const {
+  constexpr const T& operator[](size_t i) const {
     return i == 0 ? x : i == 1 ? y : i == 2 ? z : w;
   }
-  LINALG_CONSTEXPR14 T& operator[](int i) {
+  LINALG_CONSTEXPR14 T& operator[](size_t i) {
     return i == 0 ? x : i == 1 ? y : i == 2 ? z : w;
   }
   constexpr const vec<T, 2>& xy() const {
@@ -886,7 +889,7 @@ struct vec<T, 4> {
 
 // Small, fixed-size matrix type, consisting of exactly M rows and N columns of
 // type T, stored in column-major order.
-template <class T, int M>
+template <class T, size_t M>
 struct mat<T, M, 1> {
   typedef vec<T, M> V;
   V x;
@@ -901,9 +904,9 @@ struct mat<T, M, 1> {
   template <class U>
   constexpr explicit mat(const mat<U, M, 1>& m)
       : mat(V(m.x)) {}
-  constexpr vec<T, 1> row(int i) const { return {x[i]}; }
-  constexpr const V& operator[](int j) const { return x; }
-  LINALG_CONSTEXPR14 V& operator[](int j) { return x; }
+  constexpr vec<T, 1> row(size_t i) const { return {x[i]}; }
+  constexpr const V& operator[](size_t) const { return x; }
+  LINALG_CONSTEXPR14 V& operator[](size_t) { return x; }
 
   template <class U, class = detail::conv_t<mat, U>>
   constexpr mat(const U& u)
@@ -913,7 +916,7 @@ struct mat<T, M, 1> {
     return converter<U, mat>{}(*this);
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct mat<T, M, 2> {
   typedef vec<T, M> V;
   V x, y;
@@ -932,9 +935,9 @@ struct mat<T, M, 2> {
   template <class U>
   constexpr explicit mat(const mat<U, M, 2>& m)
       : mat(V(m.x), V(m.y)) {}
-  constexpr vec<T, 2> row(int i) const { return {x[i], y[i]}; }
-  constexpr const V& operator[](int j) const { return j == 0 ? x : y; }
-  LINALG_CONSTEXPR14 V& operator[](int j) { return j == 0 ? x : y; }
+  constexpr vec<T, 2> row(size_t i) const { return {x[i], y[i]}; }
+  constexpr const V& operator[](size_t j) const { return j == 0 ? x : y; }
+  LINALG_CONSTEXPR14 V& operator[](size_t j) { return j == 0 ? x : y; }
 
   template <class U, class = detail::conv_t<mat, U>>
   constexpr mat(const U& u)
@@ -944,7 +947,7 @@ struct mat<T, M, 2> {
     return converter<U, mat>{}(*this);
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct mat<T, M, 3> {
   typedef vec<T, M> V;
   V x, y, z;
@@ -967,11 +970,11 @@ struct mat<T, M, 3> {
   template <class U>
   constexpr explicit mat(const mat<U, M, 3>& m)
       : mat(V(m.x), V(m.y), V(m.z)) {}
-  constexpr vec<T, 3> row(int i) const { return {x[i], y[i], z[i]}; }
-  constexpr const V& operator[](int j) const {
+  constexpr vec<T, 3> row(size_t i) const { return {x[i], y[i], z[i]}; }
+  constexpr const V& operator[](size_t j) const {
     return j == 0 ? x : j == 1 ? y : z;
   }
-  LINALG_CONSTEXPR14 V& operator[](int j) {
+  LINALG_CONSTEXPR14 V& operator[](size_t j) {
     return j == 0 ? x : j == 1 ? y : z;
   }
 
@@ -983,7 +986,7 @@ struct mat<T, M, 3> {
     return converter<U, mat>{}(*this);
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct mat<T, M, 4> {
   typedef vec<T, M> V;
   V x, y, z, w;
@@ -1010,11 +1013,11 @@ struct mat<T, M, 4> {
   template <class U>
   constexpr explicit mat(const mat<U, M, 4>& m)
       : mat(V(m.x), V(m.y), V(m.z), V(m.w)) {}
-  constexpr vec<T, 4> row(int i) const { return {x[i], y[i], z[i], w[i]}; }
-  constexpr const V& operator[](int j) const {
+  constexpr vec<T, 4> row(size_t i) const { return {x[i], y[i], z[i], w[i]}; }
+  constexpr const V& operator[](size_t j) const {
     return j == 0 ? x : j == 1 ? y : j == 2 ? z : w;
   }
-  LINALG_CONSTEXPR14 V& operator[](int j) {
+  LINALG_CONSTEXPR14 V& operator[](size_t j) {
     return j == 0 ? x : j == 1 ? y : j == 2 ? z : w;
   }
 
@@ -1059,33 +1062,33 @@ constexpr identity_t identity{1};
 // arithmetic and logical operators)
 template <class F, class A, class B>
 constexpr A fold(F f, A a, const vec<B, 1>& b) {
-  return f(a, b.x);
+  return static_cast<A>(f(a, b.x));
 }
 template <class F, class A, class B>
 constexpr A fold(F f, A a, const vec<B, 2>& b) {
-  return f(f(a, b.x), b.y);
+  return static_cast<A>(f(f(a, b.x), b.y));
 }
 template <class F, class A, class B>
 constexpr A fold(F f, A a, const vec<B, 3>& b) {
-  return f(f(f(a, b.x), b.y), b.z);
+  return static_cast<A>(f(f(f(a, b.x), b.y), b.z));
 }
 template <class F, class A, class B>
 constexpr A fold(F f, A a, const vec<B, 4>& b) {
-  return f(f(f(f(a, b.x), b.y), b.z), b.w);
+  return static_cast<A>(f(f(f(f(a, b.x), b.y), b.z), b.w));
 }
-template <class F, class A, class B, int M>
+template <class F, class A, class B, size_t M>
 constexpr A fold(F f, A a, const mat<B, M, 1>& b) {
   return fold(f, a, b.x);
 }
-template <class F, class A, class B, int M>
+template <class F, class A, class B, size_t M>
 constexpr A fold(F f, A a, const mat<B, M, 2>& b) {
   return fold(f, fold(f, a, b.x), b.y);
 }
-template <class F, class A, class B, int M>
+template <class F, class A, class B, size_t M>
 constexpr A fold(F f, A a, const mat<B, M, 3>& b) {
   return fold(f, fold(f, fold(f, a, b.x), b.y), b.z);
 }
-template <class F, class A, class B, int M>
+template <class F, class A, class B, size_t M>
 constexpr A fold(F f, A a, const mat<B, M, 4>& b) {
   return fold(f, fold(f, fold(f, fold(f, a, b.x), b.y), b.z), b.w);
 }
@@ -1188,18 +1191,18 @@ template <class A>
 constexpr scalar_t<A> maxelem(const A& a) {
   return fold(detail::max{}, a.x, a);
 }
-template <class T, int M>
-int argmin(const vec<T, M>& a) {
-  int j = 0;
-  for (int i = 1; i < M; ++i)
+template <class T, size_t M>
+size_t argmin(const vec<T, M>& a) {
+  size_t j = 0;
+  for (size_t i = 1; i < M; ++i)
     if (a[i] < a[j])
       j = i;
   return j;
 }
-template <class T, int M>
-int argmax(const vec<T, M>& a) {
-  int j = 0;
-  for (int i = 1; i < M; ++i)
+template <class T, size_t M>
+size_t argmax(const vec<T, M>& a) {
+  size_t j = 0;
+  for (size_t i = 1; i < M; ++i)
     if (a[i] > a[j])
       j = i;
   return j;
@@ -1340,15 +1343,16 @@ constexpr auto operator>>=(A& a, const B& b) -> decltype(a = a >> b) {
 }
 
 // Swizzles and subobjects
-template <int... I, class T, int M>
+template <size_t... I, class T, size_t M>
 constexpr vec<T, sizeof...(I)> swizzle(const vec<T, M>& a) {
   return {detail::getter<I>{}(a)...};
 }
-template <int I0, int I1, class T, int M>
+template <size_t I0, size_t I1, class T, size_t M>
 constexpr vec<T, I1 - I0> subvec(const vec<T, M>& a) {
   return detail::swizzle(a, detail::make_seq<I0, I1>{});
 }
-template <int I0, int J0, int I1, int J1, class T, int M, int N>
+template <size_t I0, size_t J0, size_t I1, size_t J1, class T, size_t M,
+          size_t N>
 constexpr mat<T, I1 - I0, J1 - J0> submat(const mat<T, M, N>& a) {
   return detail::swizzle(a, detail::make_seq<I0, I1>{},
                          detail::make_seq<J0, J1>{});
@@ -1509,36 +1513,36 @@ template <class T>
 constexpr vec<T, 3> cross(const vec<T, 3>& a, const vec<T, 3>& b) {
   return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr T dot(const vec<T, M>& a, const vec<T, M>& b) {
   return sum(a * b);
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr T length2(const vec<T, M>& a) {
   return dot(a, a);
 }
-template <class T, int M>
+template <class T, size_t M>
 T length(const vec<T, M>& a) {
   return std::sqrt(length2(a));
 }
-template <class T, int M>
+template <class T, size_t M>
 vec<T, M> normalize(const vec<T, M>& a) {
   return a / length(a);
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr T distance2(const vec<T, M>& a, const vec<T, M>& b) {
   return length2(b - a);
 }
-template <class T, int M>
+template <class T, size_t M>
 T distance(const vec<T, M>& a, const vec<T, M>& b) {
   return length(b - a);
 }
-template <class T, int M>
+template <class T, size_t M>
 T uangle(const vec<T, M>& a, const vec<T, M>& b) {
   T d = dot(a, b);
   return d > 1 ? 0 : std::acos(d < -1 ? -1 : d);
 }
-template <class T, int M>
+template <class T, size_t M>
 T angle(const vec<T, M>& a, const vec<T, M>& b) {
   return uangle(normalize(a), normalize(b));
 }
@@ -1547,11 +1551,11 @@ vec<T, 2> rot(T a, const vec<T, 2>& v) {
   const T s = std::sin(a), c = std::cos(a);
   return {v.x * c - v.y * s, v.x * s + v.y * c};
 }
-template <class T, int M>
+template <class T, size_t M>
 vec<T, M> nlerp(const vec<T, M>& a, const vec<T, M>& b, T t) {
   return normalize(lerp(a, b, t));
 }
-template <class T, int M>
+template <class T, size_t M>
 vec<T, M> slerp(const vec<T, M>& a, const vec<T, M>& b, T t) {
   T th = uangle(a, b);
   return th == 0 ? a
@@ -1645,71 +1649,71 @@ vec<T, 4> qslerp(const vec<T, 4>& a, const vec<T, 4>& b, T t) {
 }
 
 // Support for matrix algebra
-template <class T, int M>
+template <class T, size_t M>
 constexpr vec<T, M> mul(const mat<T, M, 1>& a, const vec<T, 1>& b) {
   return a.x * b.x;
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr vec<T, M> mul(const mat<T, M, 2>& a, const vec<T, 2>& b) {
   return a.x * b.x + a.y * b.y;
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr vec<T, M> mul(const mat<T, M, 3>& a, const vec<T, 3>& b) {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr vec<T, M> mul(const mat<T, M, 4>& a, const vec<T, 4>& b) {
   return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 constexpr mat<T, M, 1> mul(const mat<T, M, N>& a, const mat<T, N, 1>& b) {
   return {mul(a, b.x)};
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 constexpr mat<T, M, 2> mul(const mat<T, M, N>& a, const mat<T, N, 2>& b) {
   return {mul(a, b.x), mul(a, b.y)};
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 constexpr mat<T, M, 3> mul(const mat<T, M, N>& a, const mat<T, N, 3>& b) {
   return {mul(a, b.x), mul(a, b.y), mul(a, b.z)};
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 constexpr mat<T, M, 4> mul(const mat<T, M, N>& a, const mat<T, N, 4>& b) {
   return {mul(a, b.x), mul(a, b.y), mul(a, b.z), mul(a, b.w)};
 }
-template <class T, int M, int N, int P>
+template <class T, size_t M, size_t N, size_t P>
 constexpr vec<T, M> mul(const mat<T, M, N>& a, const mat<T, N, P>& b,
                         const vec<T, P>& c) {
   return mul(mul(a, b), c);
 }
-template <class T, int M, int N, int P, int Q>
+template <class T, size_t M, size_t N, size_t P, size_t Q>
 constexpr mat<T, M, Q> mul(const mat<T, M, N>& a, const mat<T, N, P>& b,
                            const mat<T, P, Q>& c) {
   return mul(mul(a, b), c);
 }
-template <class T, int M, int N, int P, int Q>
+template <class T, size_t M, size_t N, size_t P, size_t Q>
 constexpr vec<T, M> mul(const mat<T, M, N>& a, const mat<T, N, P>& b,
                         const mat<T, P, Q>& c, const vec<T, Q>& d) {
   return mul(mul(a, b, c), d);
 }
-template <class T, int M, int N, int P, int Q, int R>
+template <class T, size_t M, size_t N, size_t P, size_t Q, size_t R>
 constexpr mat<T, M, R> mul(const mat<T, M, N>& a, const mat<T, N, P>& b,
                            const mat<T, P, Q>& c, const mat<T, Q, R>& d) {
   return mul(mul(a, b, c), d);
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr mat<T, M, 1> outerprod(const vec<T, M>& a, const vec<T, 1>& b) {
   return {a * b.x};
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr mat<T, M, 2> outerprod(const vec<T, M>& a, const vec<T, 2>& b) {
   return {a * b.x, a * b.y};
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr mat<T, M, 3> outerprod(const vec<T, M>& a, const vec<T, 3>& b) {
   return {a * b.x, a * b.y, a * b.z};
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr mat<T, M, 4> outerprod(const vec<T, M>& a, const vec<T, 4>& b) {
   return {a * b.x, a * b.y, a * b.z, a * b.w};
 }
@@ -1729,32 +1733,32 @@ template <class T>
 constexpr vec<T, 4> diagonal(const mat<T, 4, 4>& a) {
   return {a.x.x, a.y.y, a.z.z, a.w.w};
 }
-template <class T, int N>
+template <class T, size_t N>
 constexpr T trace(const mat<T, N, N>& a) {
   return sum(diagonal(a));
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr mat<T, M, 1> transpose(const mat<T, 1, M>& m) {
   return {m.row(0)};
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr mat<T, M, 2> transpose(const mat<T, 2, M>& m) {
   return {m.row(0), m.row(1)};
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr mat<T, M, 3> transpose(const mat<T, 3, M>& m) {
   return {m.row(0), m.row(1), m.row(2)};
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr mat<T, M, 4> transpose(const mat<T, 4, M>& m) {
   return {m.row(0), m.row(1), m.row(2), m.row(3)};
 }
-template <class T, int M>
+template <class T, size_t M>
 constexpr mat<T, 1, M> transpose(const vec<T, M>& m) {
   return transpose(mat<T, M, 1>(m));
 }
 template <class T>
-constexpr mat<T, 1, 1> adjugate(const mat<T, 1, 1>& a) {
+constexpr mat<T, 1, 1> adjugate(const mat<T, 1, 1>&) {
   return {vec<T, 1>{1}};
 }
 template <class T>
@@ -1765,7 +1769,7 @@ template <class T>
 constexpr mat<T, 3, 3> adjugate(const mat<T, 3, 3>& a);
 template <class T>
 constexpr mat<T, 4, 4> adjugate(const mat<T, 4, 4>& a);
-template <class T, int N>
+template <class T, size_t N>
 constexpr mat<T, N, N> comatrix(const mat<T, N, N>& a) {
   return transpose(adjugate(a));
 }
@@ -1785,41 +1789,41 @@ constexpr T determinant(const mat<T, 3, 3>& a) {
 }
 template <class T>
 constexpr T determinant(const mat<T, 4, 4>& a);
-template <class T, int N>
+template <class T, size_t N>
 constexpr mat<T, N, N> inverse(const mat<T, N, N>& a) {
   return adjugate(a) / determinant(a);
 }
 
 // Vectors and matrices can be used as ranges
-template <class T, int M>
+template <class T, size_t M>
 T* begin(vec<T, M>& a) {
   return &a.x;
 }
-template <class T, int M>
+template <class T, size_t M>
 const T* begin(const vec<T, M>& a) {
   return &a.x;
 }
-template <class T, int M>
+template <class T, size_t M>
 T* end(vec<T, M>& a) {
   return begin(a) + M;
 }
-template <class T, int M>
+template <class T, size_t M>
 const T* end(const vec<T, M>& a) {
   return begin(a) + M;
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 vec<T, M>* begin(mat<T, M, N>& a) {
   return &a.x;
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 const vec<T, M>* begin(const mat<T, M, N>& a) {
   return &a.x;
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 vec<T, M>* end(mat<T, M, N>& a) {
   return begin(a) + N;
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 const vec<T, M>* end(const mat<T, M, N>& a) {
   return begin(a) + N;
 }
@@ -2040,22 +2044,22 @@ std::basic_ostream<C>& operator<<(std::basic_ostream<C>& out,
   return out << '{' << v[0] << ',' << v[1] << ',' << v[2] << ',' << v[3] << '}';
 }
 
-template <class C, class T, int M>
+template <class C, class T, size_t M>
 std::basic_ostream<C>& operator<<(std::basic_ostream<C>& out,
                                   const mat<T, M, 1>& m) {
   return out << '{' << m[0] << '}';
 }
-template <class C, class T, int M>
+template <class C, class T, size_t M>
 std::basic_ostream<C>& operator<<(std::basic_ostream<C>& out,
                                   const mat<T, M, 2>& m) {
   return out << '{' << m[0] << ',' << m[1] << '}';
 }
-template <class C, class T, int M>
+template <class C, class T, size_t M>
 std::basic_ostream<C>& operator<<(std::basic_ostream<C>& out,
                                   const mat<T, M, 3>& m) {
   return out << '{' << m[0] << ',' << m[1] << ',' << m[2] << '}';
 }
-template <class C, class T, int M>
+template <class C, class T, size_t M>
 std::basic_ostream<C>& operator<<(std::basic_ostream<C>& out,
                                   const mat<T, M, 4>& m) {
   return out << '{' << m[0] << ',' << m[1] << ',' << m[2] << ',' << m[3] << '}';
@@ -2094,28 +2098,28 @@ struct hash<linalg::vec<T, 4>> {
   }
 };
 
-template <class T, int M>
+template <class T, size_t M>
 struct hash<linalg::mat<T, M, 1>> {
   std::size_t operator()(const linalg::mat<T, M, 1>& v) const {
     std::hash<linalg::vec<T, M>> h;
     return h(v.x);
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct hash<linalg::mat<T, M, 2>> {
   std::size_t operator()(const linalg::mat<T, M, 2>& v) const {
     std::hash<linalg::vec<T, M>> h;
     return h(v.x) ^ (h(v.y) << M);
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct hash<linalg::mat<T, M, 3>> {
   std::size_t operator()(const linalg::mat<T, M, 3>& v) const {
     std::hash<linalg::vec<T, M>> h;
     return h(v.x) ^ (h(v.y) << M) ^ (h(v.z) << (M * 2));
   }
 };
-template <class T, int M>
+template <class T, size_t M>
 struct hash<linalg::mat<T, M, 4>> {
   std::size_t operator()(const linalg::mat<T, M, 4>& v) const {
     std::hash<linalg::vec<T, M>> h;

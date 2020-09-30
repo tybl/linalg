@@ -37,40 +37,43 @@ public:
   operator unsigned short() { return dist_ushort(rng); }
   template <class T>
   operator linalg::vec<T, 1>() {
-    return linalg::vec<T, 1>((T) * this);
+    return linalg::vec<T, 1>(static_cast<T>(*this));
   }
   template <class T>
   operator linalg::vec<T, 2>() {
-    return linalg::vec<T, 2>((T) * this, (T) * this);
+    return linalg::vec<T, 2>(static_cast<T>(*this), static_cast<T>(*this));
   }
   template <class T>
   operator linalg::vec<T, 3>() {
-    return linalg::vec<T, 3>((T) * this, (T) * this, (T) * this);
+    return linalg::vec<T, 3>(static_cast<T>(*this), static_cast<T>(*this),
+                             static_cast<T>(*this));
   }
   template <class T>
   operator linalg::vec<T, 4>() {
-    return linalg::vec<T, 4>((T) * this, (T) * this, (T) * this, *this);
+    return linalg::vec<T, 4>(static_cast<T>(*this), static_cast<T>(*this),
+                             static_cast<T>(*this), *this);
   }
-  template <class T, int M>
+  template <class T, size_t M>
   operator linalg::mat<T, M, 1>() {
-    return linalg::mat<T, M, 1>((linalg::vec<T, M>)*this);
+    return linalg::mat<T, M, 1>(static_cast<linalg::vec<T, M>>(*this));
   }
-  template <class T, int M>
+  template <class T, size_t M>
   operator linalg::mat<T, M, 2>() {
-    return linalg::mat<T, M, 2>((linalg::vec<T, M>)*this,
-                                (linalg::vec<T, M>)*this);
+    return linalg::mat<T, M, 2>(static_cast<linalg::vec<T, M>>(*this),
+                                static_cast<linalg::vec<T, M>>(*this));
   }
-  template <class T, int M>
+  template <class T, size_t M>
   operator linalg::mat<T, M, 3>() {
-    return linalg::mat<T, M, 3>((linalg::vec<T, M>)*this,
-                                (linalg::vec<T, M>)*this,
-                                (linalg::vec<T, M>)*this);
+    return linalg::mat<T, M, 3>(static_cast<linalg::vec<T, M>>(*this),
+                                static_cast<linalg::vec<T, M>>(*this),
+                                static_cast<linalg::vec<T, M>>(*this));
   }
-  template <class T, int M>
+  template <class T, size_t M>
   operator linalg::mat<T, M, 4>() {
-    return linalg::mat<T, M, 4>(
-        (linalg::vec<T, M>)*this, (linalg::vec<T, M>)*this,
-        (linalg::vec<T, M>)*this, (linalg::vec<T, M>)*this);
+    return linalg::mat<T, M, 4>(static_cast<linalg::vec<T, M>>(*this),
+                                static_cast<linalg::vec<T, M>>(*this),
+                                static_cast<linalg::vec<T, M>>(*this),
+                                static_cast<linalg::vec<T, M>>(*this));
   }
 };
 static const int reps =
@@ -892,16 +895,16 @@ TEST_CASE_TEMPLATE(
 
 /////////////////////
 
-template <class T, int M>
+template <class T, size_t M>
 void require_approx_equal(const linalg::vec<T, M>& a,
                           const linalg::vec<T, M>& b) {
-  for (int j = 0; j < M; ++j)
+  for (size_t j = 0; j < M; ++j)
     REQUIRE(a[j] == doctest::Approx(b[j]));
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 void require_approx_equal(const linalg::mat<T, M, N>& a,
                           const linalg::mat<T, M, N>& b) {
-  for (int i = 0; i < N; ++i)
+  for (size_t i = 0; i < N; ++i)
     require_approx_equal(a[i], b[i]);
 }
 
@@ -1104,8 +1107,8 @@ TEST_CASE_TEMPLATE("matrix inverse is correct for general case", T,
       {1, 2, 3, 4}, {5, -6, 7, 8}, {9, 10, -11, 12}, {13, 14, 15, -16}};
   const linalg::mat<T, 4, 4> inv = inverse(mat);
   const linalg::mat<T, 4, 4> id = mul(mat, inv);
-  for (int j = 0; j < 4; ++j) {
-    for (int i = 0; i < 4; ++i) {
+  for (size_t j = 0; j < 4; ++j) {
+    for (size_t i = 0; i < 4; ++i) {
       if (i == j)
         REQUIRE(id[j][i] == doctest::Approx(1.0f));
       else
@@ -1141,15 +1144,15 @@ TEST_CASE_TEMPLATE("rotation quaternions roundtrip with rotation matrices", T,
     linalg::vec<T, 4> q2 = rotation_quat(qmat(q));
     if (dot(q, q2) > 0) // q2 should either equal q or -q
     {
-      REQUIRE(std::abs(q.x - q2.x) < 0.0001);
-      REQUIRE(std::abs(q.y - q2.y) < 0.0001);
-      REQUIRE(std::abs(q.z - q2.z) < 0.0001);
-      REQUIRE(std::abs(q.w - q2.w) < 0.0001);
+      REQUIRE(std::abs(q.x - q2.x) < static_cast<T>(0.0001));
+      REQUIRE(std::abs(q.y - q2.y) < static_cast<T>(0.0001));
+      REQUIRE(std::abs(q.z - q2.z) < static_cast<T>(0.0001));
+      REQUIRE(std::abs(q.w - q2.w) < static_cast<T>(0.0001));
     } else {
-      REQUIRE(std::abs(q.x + q2.x) < 0.0001);
-      REQUIRE(std::abs(q.y + q2.y) < 0.0001);
-      REQUIRE(std::abs(q.z + q2.z) < 0.0001);
-      REQUIRE(std::abs(q.w + q2.w) < 0.0001);
+      REQUIRE(std::abs(q.x + q2.x) < static_cast<T>(0.0001));
+      REQUIRE(std::abs(q.y + q2.y) < static_cast<T>(0.0001));
+      REQUIRE(std::abs(q.z + q2.z) < static_cast<T>(0.0001));
+      REQUIRE(std::abs(q.w + q2.w) < static_cast<T>(0.0001));
     }
   }
 }
@@ -1447,7 +1450,7 @@ TEST_CASE("templates instantiate correctly") {
   MATCH(float3, float3() - float());
   MATCH(double4, double4() * double());
   MATCH(double2, double2() / double());
-  MATCH(int3, int3() % int(1));
+  MATCH(int3, int3() % 1);
   MATCH(int4, int4() | int());
   MATCH(int2, short2() ^ short());
   MATCH(int3, short3() & short());
@@ -1480,7 +1483,7 @@ TEST_CASE("templates instantiate correctly") {
   MATCH(float3&, f3 -= float());
   MATCH(float4&, f4 *= float());
   MATCH(float2&, f2 /= float());
-  MATCH(int2&, i2 %= int(1));
+  MATCH(int2&, i2 %= 1);
   MATCH(int3&, i3 |= int());
   MATCH(int4&, i4 ^= int());
   MATCH(int2&, i2 &= int());
@@ -1509,8 +1512,8 @@ TEST_CASE("templates instantiate correctly") {
   MATCH(float, product(float4()));
 
   // Exercise selection functions
-  MATCH(int, argmin(float2()));
-  MATCH(int, argmax(float3()));
+  MATCH(size_t, argmin(float2()));
+  MATCH(size_t, argmax(float3()));
   MATCH(float, minelem(float4()));
   MATCH(float, maxelem(float2()));
 

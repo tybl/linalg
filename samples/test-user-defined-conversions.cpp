@@ -104,8 +104,8 @@ struct converter<float4x4, Mat4> {
 TEST_CASE("Test user-defined conversions for linalg::vec<T,2>") {
   float2 a{1, 2};
   Vec2 b = a;
-  CHECK(b.x == 1);
-  CHECK(b.y == 2);
+  CHECK(b.x == 1.f);
+  CHECK(b.y == 2.f);
 
   float2 c = b;
   CHECK(c == a);
@@ -114,9 +114,9 @@ TEST_CASE("Test user-defined conversions for linalg::vec<T,2>") {
 TEST_CASE("Test user-defined conversions for linalg::vec<T,3>") {
   float3 a{1, 2, 3};
   Vec3 b = a;
-  CHECK(b.x == 1);
-  CHECK(b.y == 2);
-  CHECK(b.z == 3);
+  CHECK(b.x == 1.f);
+  CHECK(b.y == 2.f);
+  CHECK(b.z == 3.f);
 
   float3 c = b;
   CHECK(c == a);
@@ -125,10 +125,10 @@ TEST_CASE("Test user-defined conversions for linalg::vec<T,3>") {
 TEST_CASE("Test user-defined conversions for linalg::vec<T,4>") {
   float4 a{1, 2, 3, 4};
   Vec4 b = a;
-  CHECK(b.x == 1);
-  CHECK(b.y == 2);
-  CHECK(b.z == 3);
-  CHECK(b.w == 4);
+  CHECK(b.x == 1.f);
+  CHECK(b.y == 2.f);
+  CHECK(b.z == 3.f);
+  CHECK(b.w == 4.f);
 
   float4 c = b;
   CHECK(c == a);
@@ -137,10 +137,10 @@ TEST_CASE("Test user-defined conversions for linalg::vec<T,4>") {
 TEST_CASE("Test user-defined conversions for linalg::mat<T,M,2>") {
   float2x2 a{{1, 2}, {3, 4}};
   Mat2 b = a;
-  CHECK(b.m[0] == 1);
-  CHECK(b.m[1] == 2);
-  CHECK(b.m[2] == 3);
-  CHECK(b.m[3] == 4);
+  CHECK(b.m[0] == 1.f);
+  CHECK(b.m[1] == 2.f);
+  CHECK(b.m[2] == 3.f);
+  CHECK(b.m[3] == 4.f);
 
   float2x2 c = b;
   CHECK(c == a);
@@ -149,15 +149,15 @@ TEST_CASE("Test user-defined conversions for linalg::mat<T,M,2>") {
 TEST_CASE("Test user-defined conversions for linalg::mat<T,M,3>") {
   float3x3 a{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
   Mat3 b = a;
-  CHECK(b.m[0] == 1);
-  CHECK(b.m[1] == 2);
-  CHECK(b.m[2] == 3);
-  CHECK(b.m[3] == 4);
-  CHECK(b.m[4] == 5);
-  CHECK(b.m[5] == 6);
-  CHECK(b.m[6] == 7);
-  CHECK(b.m[7] == 8);
-  CHECK(b.m[8] == 9);
+  CHECK(b.m[0] == 1.f);
+  CHECK(b.m[1] == 2.f);
+  CHECK(b.m[2] == 3.f);
+  CHECK(b.m[3] == 4.f);
+  CHECK(b.m[4] == 5.f);
+  CHECK(b.m[5] == 6.f);
+  CHECK(b.m[6] == 7.f);
+  CHECK(b.m[7] == 8.f);
+  CHECK(b.m[8] == 9.f);
 
   float3x3 c = b;
   CHECK(c == a);
@@ -166,22 +166,22 @@ TEST_CASE("Test user-defined conversions for linalg::mat<T,M,3>") {
 TEST_CASE("Test user-defined conversions for linalg::mat<T,M,4>") {
   float4x4 a{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}};
   Mat4 b = a;
-  CHECK(b.m[0] == 1);
-  CHECK(b.m[1] == 2);
-  CHECK(b.m[2] == 3);
-  CHECK(b.m[3] == 4);
-  CHECK(b.m[4] == 5);
-  CHECK(b.m[5] == 6);
-  CHECK(b.m[6] == 7);
-  CHECK(b.m[7] == 8);
-  CHECK(b.m[8] == 9);
-  CHECK(b.m[9] == 10);
-  CHECK(b.m[10] == 11);
-  CHECK(b.m[11] == 12);
-  CHECK(b.m[12] == 13);
-  CHECK(b.m[13] == 14);
-  CHECK(b.m[14] == 15);
-  CHECK(b.m[15] == 16);
+  CHECK(b.m[0] == 1.f);
+  CHECK(b.m[1] == 2.f);
+  CHECK(b.m[2] == 3.f);
+  CHECK(b.m[3] == 4.f);
+  CHECK(b.m[4] == 5.f);
+  CHECK(b.m[5] == 6.f);
+  CHECK(b.m[6] == 7.f);
+  CHECK(b.m[7] == 8.f);
+  CHECK(b.m[8] == 9.f);
+  CHECK(b.m[9] == 10.f);
+  CHECK(b.m[10] == 11.f);
+  CHECK(b.m[11] == 12.f);
+  CHECK(b.m[12] == 13.f);
+  CHECK(b.m[13] == 14.f);
+  CHECK(b.m[14] == 15.f);
+  CHECK(b.m[15] == 16.f);
 
   float4x4 c = b;
   CHECK(c == a);

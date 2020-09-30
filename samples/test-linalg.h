@@ -35,7 +35,7 @@ public:
 
   template <class T>
   T get() {
-    return get((T*)nullptr);
+    return get(static_cast<T*>(nullptr));
   }
 
   double get(double*) { return dist_double(rng); }
@@ -61,22 +61,22 @@ public:
   linalg::vec<T, 4> get(linalg::vec<T, 4>*) {
     return linalg::vec<T, 4>(get<T>(), get<T>(), get<T>(), get<T>());
   }
-  template <class T, int M>
+  template <class T, size_t M>
   linalg::mat<T, M, 1> get(linalg::mat<T, M, 1>*) {
     return linalg::mat<T, M, 1>(get<linalg::vec<T, M>>());
   }
-  template <class T, int M>
+  template <class T, size_t M>
   linalg::mat<T, M, 2> get(linalg::mat<T, M, 2>*) {
     return linalg::mat<T, M, 2>(get<linalg::vec<T, M>>(),
                                 get<linalg::vec<T, M>>());
   }
-  template <class T, int M>
+  template <class T, size_t M>
   linalg::mat<T, M, 3> get(linalg::mat<T, M, 3>*) {
     return linalg::mat<T, M, 3>(get<linalg::vec<T, M>>(),
                                 get<linalg::vec<T, M>>(),
                                 get<linalg::vec<T, M>>());
   }
-  template <class T, int M>
+  template <class T, size_t M>
   linalg::mat<T, M, 4> get(linalg::mat<T, M, 4>*) {
     return linalg::mat<T, M, 4>(
         get<linalg::vec<T, M>>(), get<linalg::vec<T, M>>(),
@@ -89,15 +89,15 @@ public:
   }
 };
 
-template <class T, int M>
+template <class T, size_t M>
 void check_approx_equal(const linalg::vec<T, M>& a,
                         const linalg::vec<T, M>& b) {
-  for (int j = 0; j < M; ++j)
+  for (size_t j = 0; j < M; ++j)
     CHECK(a[j] == doctest::Approx(b[j]));
 }
-template <class T, int M, int N>
+template <class T, size_t M, size_t N>
 void check_approx_equal(const linalg::mat<T, M, N>& a,
                         const linalg::mat<T, M, N>& b) {
-  for (int i = 0; i < N; ++i)
+  for (size_t i = 0; i < N; ++i)
     check_approx_equal(a[i], b[i]);
 }
