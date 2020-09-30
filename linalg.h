@@ -1523,7 +1523,7 @@ constexpr T length2(const vec<T, M>& a) {
 }
 template <class T, size_t M>
 T length(const vec<T, M>& a) {
-  return std::sqrt(length2(a));
+  return static_cast<T>(std::sqrt(length2(a)));
 }
 template <class T, size_t M>
 vec<T, M> normalize(const vec<T, M>& a) {

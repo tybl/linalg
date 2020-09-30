@@ -890,7 +890,6 @@ TEST_CASE_TEMPLATE(
   a = std::move(b); // This line is known to cause problems if
                     // linalg::operator+= is allowed to match too broadly.
   CHECK(a.size() == 3);
-  CHECK(b.size() == 0);
 }
 
 /////////////////////
@@ -928,7 +927,6 @@ TEST_CASE("no unintended ADL on operator +=") {
       std::move(tris_a); // This line is known to cause problems if
                          // linalg::operator+= is allowed to match too broadly.
   REQUIRE(tris_b.size() == 3);
-  REQUIRE(tris_a.size() == 0);
 }
 
 TEST_CASE("fold functions behave as intended") {
